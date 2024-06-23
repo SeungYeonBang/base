@@ -5,9 +5,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <pthread.h>
-
 #include "AutoLock.h"
+
+#define RET_SUCCESS  0
+#define RET_EMPTY   -2
+#define RET_FULL    -3
+#define RET_EOS     -4
+
 
 class CircularQueue
 {
@@ -15,7 +19,7 @@ public:
     CircularQueue(int capability);
     ~CircularQueue();
 
-    void push(int d);
+    int push(int d);
     int  pop();
 
     bool isEmpty();
@@ -29,8 +33,8 @@ private:
     int mTail;
 
     int* mData;
+
     AutoLock mLock;
-    pthread_cond_t  mCondVar;
 };
 
 #endif /* __CIRCULAR_QUEUE_H_ */

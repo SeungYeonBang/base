@@ -9,39 +9,42 @@ CircularQueue::CircularQueue(int capability)
                 mTail(0)
 {
     mData = (int*)malloc(sizeof(int));
-    pthread_cond_init(&mCondVar, NULL);
 }
 
 CircularQueue::~CircularQueue()
 {
-    pthread_cond_destroy(&mCondVar);
     if(mData)
         free(mData);
 }
 
-void CircularQueue::push(int d)
+int CircularQueue::push(int d)
 {
-    mLock.lock();
+    Lock lock(mLock);
     if (isFull())
-        return;
+    {
+        printf("buffer size is Full!! \n");
+        return RET_FULL;
+    }
 
     mData[mTail] = d;
     mTail = ( mTail + 1 ) % mCapability;
     mSize ++;
-    pthread_cond_signal(&mCondVar);
-    mLock.unlock();
+
+    return RET_SUCCESS;
 }
 
 int CircularQueue::pop()
 {
-    mLock.lock();
+    Lock lock(mLock);
     if (isEmpty())
-        pthread_cond_wait(&mCondVar, &mLock.mLock);
+    {
+        printf("is Empty!!\n");
+        return RET_EMPTY;
+    }
 
     int d = mData[mHead];
     mHead = (mHead + 1) % mCapability;
     mSize --;
-    mLock.unlock();
     return d;
 }
 
