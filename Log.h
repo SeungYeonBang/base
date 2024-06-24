@@ -15,6 +15,8 @@
 #define CYAN    "\033[36m"      /* Cyan */
 #define WHITE   "\033[37m"      /* White */
 
+#define __BASE_FILE_NAME__  (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
 typedef enum
 {
     LOG_LEVEL_NONE,
@@ -27,18 +29,36 @@ typedef enum
     MAX_LOG_LEVEL
 }LOG_LEVEL_e;
 
+
+
+#define LOGT(fmt, args...)      Log::printLog(LOG_LEVEL_TRACE, GREEN, fmt, ##args);
+
+#define LOGD(fmt, args...)      Log::printLog(LOG_LEVEL_DEBUG, BLUE, fmt, ##args);
+            
+#define LOGI(fmt, args...)      { \
+                                    const char* func = Log::methodNm(__PRETTY_FUNCTION__); \
+                                    Log::printLog(LOG_LEVEL_INFO, NONE, "[%s:%d] %s() " fmt, __BASE_FILE_NAME__, __LINE__, func, ##args); \
+                                }
+
+#define LOGW(fmt, args...)      { \
+                                    const char* func = Log::methodNm(__PRETTY_FUNCTION__); \
+                                    Log::printLog(LOG_LEVEL_WARN, YELLOW, "[%s:%d] %s() " fmt, __BASE_FILE_NAME__, __LINE__, func, ##args); \
+                                }
+
+#define LOGE(fmt, args...)      { \
+                                    const char* func = Log::methodNm(__PRETTY_FUNCTION__); \
+                                    Log::printLog(LOG_LEVEL_ERROR, RED, "[%s:%d] %s() " fmt, __BASE_FILE_NAME__, __LINE__, func, ##args); \
+                                }
+
 class Log
 {
 public:
-    void setLogLevel(LOG_LEVEL_e level);
+    static const char* methodNm(const char* func);
+    static void printLog(int priority, const char* color, const char* fmt, ...);
 
+    void setLogLevel(LOG_LEVEL_e level);
     static void hexDump(const void* ptr, int size);
 
-    static void LOGT(const char* fmt, ...);
-    static void LOGD(const char* fmt, ...);
-    static void LOGI(const char* fmt, ...);
-    static void LOGW(const char* fmt, ...);
-    static void LOGE(const char* fmt, ...);
 private:
     Log() {}
     virtual ~Log() {}

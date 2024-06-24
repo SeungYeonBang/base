@@ -2,13 +2,35 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
 #include <cstdlib>
 #include <cstdbool>
 #include <unistd.h>
 
+#define MAX_FUNCION_SIZE    (1024)
+
 #define ISPRINTABLE(c)  (((c)>=32 && (c)<=126))
 
 static LOG_LEVEL_e  gLogLevel = LOG_LEVEL_TRACE;
+
+const char* Log::methodNm(const char* func)
+{
+    char tmp[MAX_FUNCION_SIZE];
+    char *begin, *end, *p;
+
+    strncpy(tmp, func, MAX_FUNCION_SIZE-1);
+    tmp[MAX_FUNCION_SIZE-1] = 0;
+
+    end = strrchr(tmp, '(');
+    if (end) *end = 0;
+
+    begin = NULL;
+    p = tmp;
+    while((p = strchr(p, ' '))) { begin = p; p++; }
+    if (begin) begin++;
+
+    return begin;
+}
 
 static void stdoutWrite(FILE* fp, const char* color, const char* buf)
 {
@@ -22,17 +44,16 @@ static void stdoutWrite(FILE* fp, const char* color, const char* buf)
 
     fflush(fp);
 }
-
-void Log::LOGT(const char* fmt, ...)
+void Log::printLog(int priority, const char* color, const char* fmt, ...)
 {
     va_list ap;
     FILE* fp;
-    char buf[4096] = {0, };
+    char buf[4096];
+
+    if(priority > gLogLevel)
+        return;
 
     fp = stdout;
-
-    if(LOG_LEVEL_TRACE > gLogLevel)
-        return;
 
     if(!fp)
         return;
@@ -42,95 +63,7 @@ void Log::LOGT(const char* fmt, ...)
     va_end(ap);
 
     buf[sizeof(buf) -1] = 0;
-    stdoutWrite(fp, GREEN, buf);
-}
-
-void Log::LOGD(const char* fmt, ...)
-{
-        va_list ap;
-    FILE* fp;
-    char buf[4096] = {0, };
-
-    fp = stdout;
-
-    if(LOG_LEVEL_DEBUG > gLogLevel)
-        return;
-
-    if(!fp)
-        return;
-
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-
-    buf[sizeof(buf) -1] = 0;
-    stdoutWrite(fp, BLUE, buf);
-}
-
-void Log::LOGI(const char* fmt, ...)
-{
-        va_list ap;
-    FILE* fp;
-    char buf[4096] = {0, };
-
-    fp = stdout;
-
-    if(LOG_LEVEL_INFO > gLogLevel)
-        return;
-
-    if(!fp)
-        return;
-
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-
-    buf[sizeof(buf) -1] = 0;
-    stdoutWrite(fp, NONE, buf);
-}
-
-void Log::LOGW(const char* fmt, ...)
-{
-    va_list ap;
-    FILE* fp;
-    char buf[4096] = {0, };
-
-    fp = stdout;
-
-    if(LOG_LEVEL_WARN > gLogLevel)
-        return;
-
-    if(!fp)
-        return;
-
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-
-    buf[sizeof(buf) -1] = 0;
-    stdoutWrite(fp, YELLOW, buf);
-}
-
-void Log::LOGE(const char* fmt, ...)
-{
-    va_list ap;
-    FILE* fp;
-    char buf[4096] = {0, };
-
-    fp = stdout;
-
-    if(LOG_LEVEL_ERROR > gLogLevel)
-        return;
-
-    if(!fp)
-        return;
-
-    va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-
-    buf[sizeof(buf) -1] = 0;
-    stdoutWrite(fp, RED, buf);
+    stdoutWrite(fp, color, buf);
 }
 
 void Log::setLogLevel(LOG_LEVEL_e level)
